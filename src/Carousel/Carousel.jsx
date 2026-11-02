@@ -1,32 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Children } from "react";
 import "./Carousel.css";
 import CarouselItem from "./CarouselItem";
 
-export default function Carousel({ images = [], intervalSeconds = 3 }) {
+export default function Carousel({
+  images = [],
+  children,
+  intervalSeconds = 3,
+}) {
   const [selected, setSelected] = useState(0);
-  // משתנה סטייט חדש שבודק האם העכבר נמצא כרגע מעל הקרוסלה
   const [isPaused, setIsPaused] = useState(false);
 
-  // פונקציות להעברת תמונה באופן מעגלי
+  // המרת הילדים (אם קיימים) למערך תקני בריאקט
+  const childrenArray = Children.toArray(children);
+  const hasChildren = childrenArray.length > 0;
+
+  // חישוב כמות השקופיות הכוללת (לפי ילדים או לפי מערך תמונות)
+  const totalSlides = hasChildren ? childrenArray.length : images.length;
+
+  // פונקציות ניווט מעגליות לפי מספר השקופיות הכולל
   const handleNext = () => {
-    setSelected((prev) => (prev + 1) % images.length);
+    if (totalSlides === 0) return;
+    setSelected((prev) => (prev + 1) % totalSlides);
   };
 
   const handlePrev = () => {
-    setSelected((prev) => (prev - 1 + images.length) % images.length);
+    if (totalSlides === 0) return;
+    setSelected((prev) => (prev - 1 + totalSlides) % totalSlides);
   };
 
-  // טיימר להחלפה אוטומטית של התמונות
+  // טיימר להחלפה אוטומטית
   useEffect(() => {
-    // אם אין שניות, אין תמונות, או שהמשתמש משהה עם העכבר - לא מפעילים טיימר
-    if (!intervalSeconds || images.length === 0 || isPaused) return;
+    if (!intervalSeconds || totalSlides === 0 || isPaused) return;
 
     const timer = setInterval(() => {
       handleNext();
     }, intervalSeconds * 1000);
 
     return () => clearInterval(timer);
-  }, [selected, intervalSeconds, images.length, isPaused]);
+  }, [selected, intervalSeconds, totalSlides, isPaused]);
+
+  // אם אין תמונות ואין ילדים - מציגים הודעת ריקנות מתאימה לפי ה-CSS
+  if (totalSlides === 0) {
+    return (
+      <div className="carousel-message">
+        אין פריטים להצגה בקרוסלה
+      </div>
+    );
+  }
 
   return (
     <div
@@ -34,23 +54,31 @@ export default function Carousel({ images = [], intervalSeconds = 3 }) {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* הצגת התמונה הנבחרת בלבד */}
-      {images.map((src, index) =>
-        index === selected ? (
-          <CarouselItem
-            key={index}
-            src={src}
-            alt={`תמונה ${index + 1}`}
-          />
-        ) : null
-      )}
+      {/* הצגת השקופית הנבחרת: ילדים או תמונות */}
+      {hasChildren
+        ? childrenArray.map((child, index) =>
+            index === selected ? (
+              <div key={index} className="carousel-item">
+                {child}
+              </div>
+            ) : null
+          )
+        : images.map((src, index) =>
+            index === selected ? (
+              <CarouselItem
+                key={index}
+                src={src}
+                alt={`תמונה ${index + 1}`}
+              />
+            ) : null
+          )}
 
       {/* כפתור אחורה */}
       <button
         type="button"
         className="carousel-arrow prev"
         onClick={handlePrev}
-        aria-label="תמונה קודמת"
+        aria-label="שקופית קודמת"
       >
         &#8592;
       </button>
@@ -60,20 +88,20 @@ export default function Carousel({ images = [], intervalSeconds = 3 }) {
         type="button"
         className="carousel-arrow next"
         onClick={handleNext}
-        aria-label="תמונה הבאה"
+        aria-label="שקופית הבאה"
       >
         &#8594;
       </button>
 
-      {/* שורת נקודות הניווט */}
+      {/* שורת פסי הניווט בתחתית */}
       <div className="carousel-dots">
-        {images.map((_, index) => (
+        {Array.from({ length: totalSlides }).map((_, index) => (
           <button
             key={index}
             type="button"
             className={`carousel-dot ${index === selected ? "active" : ""}`}
             onClick={() => setSelected(index)}
-            aria-label={`עבור לתמונה ${index + 1}`}
+            aria-label={`עבור לשקופית ${index + 1}`}
           />
         ))}
       </div>
