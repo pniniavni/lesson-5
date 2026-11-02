@@ -3,7 +3,6 @@ import "./Carousel.css";
 import CarouselItem from "./CarouselItem";
 
 export default function Carousel({ images = [], intervalSeconds = 3 }) {
-  // משתנה סטייט לשמירת האינדקס של התמונה המוצגת (מתחיל מ-0)
   const [selected, setSelected] = useState(0);
 
   return (
@@ -17,6 +16,17 @@ export default function Carousel({ images = [], intervalSeconds = 3 }) {
           />
         ) : null
       )}
+
+      <div className="carousel-dots">
+        {images.map((_, index) => (
+          <button
+            key={index}
+            className={`carousel-dot ${index === selected ? "active" : ""}`}
+            onClick={() => setSelected(index)}
+            aria-label={`עבור לתמונה ${index + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
