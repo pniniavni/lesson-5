@@ -4,8 +4,10 @@ import CarouselItem from "./CarouselItem";
 
 export default function Carousel({ images = [], intervalSeconds = 3 }) {
   const [selected, setSelected] = useState(0);
+  // משתנה סטייט חדש שבודק האם העכבר נמצא כרגע מעל הקרוסלה
+  const [isPaused, setIsPaused] = useState(false);
 
-  // פונקציות להעברת תמונה
+  // פונקציות להעברת תמונה באופן מעגלי
   const handleNext = () => {
     setSelected((prev) => (prev + 1) % images.length);
   };
@@ -16,21 +18,23 @@ export default function Carousel({ images = [], intervalSeconds = 3 }) {
 
   // טיימר להחלפה אוטומטית של התמונות
   useEffect(() => {
-    // אם אין שניות מוגדרות או שאין תמונות - אין צורך בטיימר
-    if (!intervalSeconds || images.length === 0) return;
+    // אם אין שניות, אין תמונות, או שהמשתמש משהה עם העכבר - לא מפעילים טיימר
+    if (!intervalSeconds || images.length === 0 || isPaused) return;
 
-    // הפעלת שעון שקופץ כל X שניות לתמונה הבאה
     const timer = setInterval(() => {
       handleNext();
     }, intervalSeconds * 1000);
 
-    // ניקוי השעון בעת עדכון או פירוק הרכיב כדי למנוע כפילויות
     return () => clearInterval(timer);
-  }, [selected, intervalSeconds, images.length]);
+  }, [selected, intervalSeconds, images.length, isPaused]);
 
   return (
-    <div className="carousel">
-      {/* הצגת התמונה הנבחרת */}
+    <div
+      className="carousel"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* הצגת התמונה הנבחרת בלבד */}
       {images.map((src, index) =>
         index === selected ? (
           <CarouselItem
