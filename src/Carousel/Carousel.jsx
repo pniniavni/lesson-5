@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Carousel.css";
 import CarouselItem from "./CarouselItem";
 
 export default function Carousel({ images = [], intervalSeconds = 3 }) {
   const [selected, setSelected] = useState(0);
 
+  // פונקציות להעברת תמונה
   const handleNext = () => {
     setSelected((prev) => (prev + 1) % images.length);
   };
@@ -12,6 +13,20 @@ export default function Carousel({ images = [], intervalSeconds = 3 }) {
   const handlePrev = () => {
     setSelected((prev) => (prev - 1 + images.length) % images.length);
   };
+
+  // טיימר להחלפה אוטומטית של התמונות
+  useEffect(() => {
+    // אם אין שניות מוגדרות או שאין תמונות - אין צורך בטיימר
+    if (!intervalSeconds || images.length === 0) return;
+
+    // הפעלת שעון שקופץ כל X שניות לתמונה הבאה
+    const timer = setInterval(() => {
+      handleNext();
+    }, intervalSeconds * 1000);
+
+    // ניקוי השעון בעת עדכון או פירוק הרכיב כדי למנוע כפילויות
+    return () => clearInterval(timer);
+  }, [selected, intervalSeconds, images.length]);
 
   return (
     <div className="carousel">
@@ -26,30 +41,28 @@ export default function Carousel({ images = [], intervalSeconds = 3 }) {
         ) : null
       )}
 
-      {/* כפתור אחורה (שמאלה) */}
+      {/* כפתור אחורה */}
       <button
         type="button"
         className="carousel-arrow prev"
         onClick={handlePrev}
         aria-label="תמונה קודמת"
-        style={{ zIndex: 10, cursor: "pointer" }}
       >
-        ❮
+        &#8592;
       </button>
 
-      {/* כפתור קדימה (ימינה) */}
+      {/* כפתור קדימה */}
       <button
         type="button"
         className="carousel-arrow next"
         onClick={handleNext}
         aria-label="תמונה הבאה"
-        style={{ zIndex: 10, cursor: "pointer" }}
       >
-        ❯
+        &#8594;
       </button>
 
       {/* שורת נקודות הניווט */}
-      <div className="carousel-dots" style={{ zIndex: 10 }}>
+      <div className="carousel-dots">
         {images.map((_, index) => (
           <button
             key={index}
